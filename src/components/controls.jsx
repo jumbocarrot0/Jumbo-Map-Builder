@@ -67,13 +67,15 @@ export function Controls(props) {
                 bottom: "20px",
                 left: "20px",
                 width: "20vw",
-                height: "10vh",
+                height: "20vh",
                 maxWidth: "70vw",
                 maxHeight: "100vh",
                 backgroundColor: "rgba(0, 0, 0, 0.5)"
             }}>
                 <p><strong>Shift + Left Click</strong> - Drag map</p>
                 <p><strong>Alt + Left Click</strong> - Delete</p>
+                <p><strong>Drag + Q</strong> - Rotate token left</p>
+                <p><strong>Drag + E</strong> - Rotate token right</p>
         </div>
     )
 }
