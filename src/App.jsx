@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
+import React, { useState, useEffect } from 'react';
 import interact from "interactjs";
 import $ from "jquery";
-import tileData from './data/tileData';
 
-import { Button, Card, Container, Col, Image } from 'react-bootstrap';
+import { Button, Card, Container, Col, Image, Form } from 'react-bootstrap';
 
 import domtoimage from 'dom-to-image';
 import { saveAs } from 'file-saver';
 
+import { SystemTilePlacer, addSystemTile } from "./components/systemTilePlacer"
+import { GalaxyTokenPlacer } from './components/galaxyTokenPlacer';
+import { Controls } from './components/controls';
 
 
 /**
@@ -28,11 +28,11 @@ async function downloadImage() {
 }
 function App() {
 
-  const systemPool = []
+  const [mapStringInput, setMapStringInput] = useState("");
+
   const mapTiles = {
     "18": { left: 1, top: 4 }
   }
-  const unusedTilesBinPosition = { x: 0, y: 0 }
   const mapPosition = { x: 0, y: 0 }
 
   function getCentralTile() {
@@ -41,6 +41,7 @@ function App() {
     let maxX = -Infinity;
     let maxY = -Infinity;
 
+    console.log(mapTiles)
     for (const coord of Object.values(mapTiles)) {
       console.log(coord)
       if (coord.left < minX) {
@@ -59,7 +60,7 @@ function App() {
 
     const centralCoord = { left: Math.round((maxX + minX) / 2), top: Math.round((maxY + minY) / 2) }
     if ((centralCoord.left + centralCoord.top) % 2 === 0) {
-      centralCoord.top += 1
+      // centralCoord.top += 1
     }
 
     return centralCoord
@@ -84,10 +85,22 @@ function App() {
       console.log(coord)
       const { left, top } = coord
       // Every move away from the center adds a difference of 2 to the coordinate sum.
-      rings = Math.max(rings, getRingOfTile({ left: centralCoord.left - left, top: centralCoord.top - top }))
+      const ring = getRingOfTile({ left: centralCoord.left - left, top: centralCoord.top - top })
+      console.log(ring)
+      rings = Math.max(rings, ring)
     }
 
     return rings
+  }
+
+  function clearMap() {
+    const map = document.querySelector("#map");
+    while (map.firstChild) {
+      map.removeChild(map.lastChild)
+    }
+    for (const key of Object.keys(mapTiles)) {
+      delete mapTiles[key]
+    }
   }
 
   function getMapString() {
@@ -98,9 +111,12 @@ function App() {
     // Create a blank map string with -1's full for the necessary number of rings
     let mapString = Array(rings * (rings + 1) / 2 * 6 + 1).fill("-1")
 
+    console.log(mapTiles)
+
     // Checks through each system and finds the corresponding index it will be placed in the map string
     // (As opposed to finding the corresponding coordinate for each index and finding if there is a hex on that coordinate.)
     for (const systemID of Object.keys(mapTiles)) {
+      if (systemID === "-1") continue;
       const { left, top } = mapTiles[systemID]
 
       const normalisedLeft = left - centralCoord.left // Big to the right, small to the left
@@ -149,212 +165,104 @@ function App() {
       console.log(index, systemID, ring)
     }
 
+    if (mapString[0] === "18") {
+      mapString.shift()
+    } else {
+      mapString[0] = `{${mapString[0]}}`
+    }
+
     console.log(mapString.join(' '))
     return mapString.join(' ')
 
   }
 
-  for (const key of Object.keys(tileData)) {
-    systemPool.push(
-      <Col className='p-0' key={key}>
-        <Card className='m-1 border-2 p-2' border="light">
-          <Image
-            className='systemTile z-2 systemPool grabbable'
-            width="200px"
-            src={`/tiles/ST_${key}.webp`}
-            system-id={key}
-          />
-          <div className="position-absolute bottom-0 start-10">{key}</div>
-        </Card>
-      </Col>
-    )
+  function loadMapString() {
+    console.log(mapStringInput.split(' '))
+    clearMap();
+    const map = document.getElementById("map");
+
+    const mapString = mapStringInput.split(' ')
+    if (mapString.at(0).includes("{")) {
+      mapString[0] = mapString[0].slice(1, -1)
+    } else {
+      mapString.unshift("18")
+    }
+
+    let currentRing = 0;
+    const centralCoord = { left: 1, top: 4 }
+    let left = 1;
+    let top = 4;
+
+    console.log(mapString)
+
+    for (let index = 0; index < mapString.length; index++) {
+      // Tricky maths here, the number of tiles in the current ring increments by 6 every new ring (minus "ring" 0 which contains just one tile)
+      // So we need to account for that, as well as the number of tiles in each previous ring combined.
+      // This corresponds to the triangle numbers, so we can use the formula for that [n(n+1)/2] and multiply it by 6 to get this condition below
+      if (index > currentRing * (currentRing + 1) * 3) {
+        currentRing++
+        left = centralCoord.left
+        top = centralCoord.top - currentRing * 2
+      }
+      const ring_index = index - currentRing * (currentRing - 1) * 3 - 1 // The index of the tile in content w/ the ring, where 0 is topmost and goes clockwise.
+      console.log(index, ring_index, currentRing, mapString[index])
+      if (ring_index === 0 || currentRing === 0) { }
+      else if (ring_index / currentRing <= 1) {
+        top++
+        left++
+      }
+      else if (ring_index / currentRing <= 2) {
+        top += 2
+      }
+      else if (ring_index / currentRing <= 3) {
+        top++
+        left--
+      }
+      else if (ring_index / currentRing <= 4) {
+        top--
+        left--
+      }
+      else if (ring_index / currentRing <= 5) {
+        top -= 2
+      }
+      else if (ring_index / currentRing <= 6) {
+        top--
+        left++
+      } else {
+        console.log("something weird happened");
+      }
+
+      const systemID = mapString[index];
+      addSystemTile(systemID, left, top, mapTiles)
+    }
   }
 
-  {
-    const unusedTilesBin = interact('#unusedTilesBin')
-    unusedTilesBin.resizable({
-      edges: { top: true, left: true, bottom: true, right: true },
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: 'parent'
-        })
-      ],
-      listeners: {
-        move: function (event) {
-          unusedTilesBinPosition.x = (parseFloat(unusedTilesBinPosition.x) || 0) + event.deltaRect.left / 2 + event.deltaRect.right / 2
-          unusedTilesBinPosition.y = (parseFloat(unusedTilesBinPosition.y) || 0) + event.deltaRect.top
-
-          Object.assign(event.target.style, {
-            width: `${event.rect.width}px`,
-            height: `${event.rect.height}px`,
-            transform: `translate(${unusedTilesBinPosition.x}px, ${unusedTilesBinPosition.y}px)`
-          })
-
-          Object.assign(event.target.dataset, unusedTilesBinPosition)
-        }
-      }
-    })
-    unusedTilesBin.draggable({
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: 'parent'
-        })
-      ],
-      listeners: {
-        start(event) {
-          console.log(event.type, event.target)
-        },
-        move(event) {
-          unusedTilesBinPosition.x += event.dx
-          unusedTilesBinPosition.y += event.dy
-
-          event.target.style.transform =
-            `translate(${unusedTilesBinPosition.x}px, ${unusedTilesBinPosition.y}px)`
-        },
-      }
-    })
-  }
-
-  // {
-  //   const mapElement = interact('#map')
-  //   mapElement.draggable({
-  //     modifiers: [
-  //       interact.modifiers.restrictRect({
-  //         restriction: 'parent'
-  //       })
-  //     ],
-  //     listeners: {
-  //       start(event) {
-  //         console.log(event.type, event.target)
-  //       },
-  //       move(event) {
-  //         mapPosition.x += event.dx
-  //         mapPosition.y += event.dy
-
-  //         event.target.style.transform =
-  //           `translate(${mapPosition.x}px, ${mapPosition.y}px)`
-  //       },
-  //     }
-  //   })
-  // }
-
+  // Map dragger
   {
     let singleTileSelect = false;
-    let systemPoolTileSelect = false;
-
-    const systemTiles = interact('.systemTile')
-    systemTiles.draggable({
+    const galaxyTokens = interact('#root')
+    galaxyTokens.draggable({
       modifiers: [
-        interact.modifiers.snap({
-          targets: [
-            function (
-              // the x and y page coordinates,
-              x,
-              y
-            ) {
-
-              if (!singleTileSelect) {
-                return {
-                  x: x,
-                  y: y,
-                  range: Infinity
-                }
-              }
-
-              // let newy = Math.round(y / 87) * 87
-              let newX;
-              let newY;
-              if (systemPoolTileSelect) {
-                newX = Math.round((x - mapPosition.x) / 150) * 150
-                newY = Math.round((y - mapPosition.y) / 174) * 174
-              } else {
-                newX = Math.round((x - mapPosition.x) / 150) * 150 + 32
-                newY = Math.round((y - mapPosition.y) / 174) * 174 + 174 / 2 - 17
-              }
-
-              // Modulo works unexpectedly with negative numbers, this makes it work as intended.
-              if (((newX % 300) + 300) % 300 < 150) {
-                if (!systemPoolTileSelect) {
-                  newX += mapPosition.x
-                  newY += mapPosition.y
-                }
-                return {
-                  x: newX,
-                  y: newY - 174 / 4,
-                  range: Infinity
-                }
-              } else {
-                if (!systemPoolTileSelect) {
-                  newX += mapPosition.x
-                  newY += mapPosition.y
-                }
-                return {
-                  x: newX,
-                  y: newY + 174 / 4,
-                  range: Infinity
-                }
-              }
-            },
-          ],
-          relativePoints: [
-            { x: 0.5, y: 0.5 },   // to the center
-          ]
-        })
       ],
       listeners: {
         start(event) {
           const target = event.target
-
           console.log(event)
 
-          if (target.classList.contains("systemPool")) {
-            let { x, y } = target
-
-            x += unusedTilesBinPosition.x
-            y += unusedTilesBinPosition.y
-
-            console.log(x, y)
-
-            const clonedElement = target.cloneNode(true);
-            clonedElement.classList.remove("z-0")
-            clonedElement.classList.add("z-2")
-            const card = target.parentElement
-            card && card.appendChild(clonedElement);
-            const container = document.querySelector("#map");
-            container.appendChild(target);
-            target.style.position = 'absolute'
-
-            target.style.left = `${x}px`;
-            target.style.top = `${y}px`
-            systemPoolTileSelect = true;
-            singleTileSelect = true;
+          if (target.classList.contains("tokenPool")) {
           } else {
-            target.classList.remove("z-0")
-            target.classList.add("z-2")
-            systemPoolTileSelect = false;
-            if (event.shiftKey) {
-              singleTileSelect = true;
-            } else {
+            if (event.altKey) {
               singleTileSelect = false;
+            } else if (event.shiftKey) {
+              singleTileSelect = false;
+            } else {
+              singleTileSelect = true;
             }
           }
-
-
         },
         move(event) {
           const target = event.target
-          if (singleTileSelect) {
-            // keep the dragged position in the data-x/data-y attributes
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-
-            // translate the element
-            target.style.transform = `translate(${x}px, ${y}px)`
-
-            // update the posiion attributes
-            target.setAttribute('data-x', x)
-            target.setAttribute('data-y', y)
-          } else {
+          if (!singleTileSelect) {
             mapPosition.x += event.dx
             mapPosition.y += event.dy
 
@@ -364,56 +272,46 @@ function App() {
           }
         },
         end(event) {
-          if (singleTileSelect) {
-            const target = event.target
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + parseFloat(target.style.left)
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + parseFloat(target.style.top)
-            target.classList.remove("z-2");
-            target.classList.add("z-0");
-            target.classList.remove("systemPool");
-            mapTiles[target.getAttribute('system-id')] = {
-              left: Math.round((x - 50) / 150),
-              top: Math.round((y - 174 / 4) / 87)
-            }
-            console.log(target)
-            console.log(mapTiles)
-          }
+          const target = event.target
         }
       }
     })
   }
 
+  useEffect(() => {
+    if (!document.getElementById("map").firstChild) {
+      addSystemTile("18", 0, 0, mapTiles);
+    }
+  }, [])
+
   return (
     <>
+
+      <div id="map" className='position-absolute' style={{ left: "0px", top: "0px" }}>
+      </div>
+
       <Button onClick={downloadImage}>
         Export
       </Button>
       <Button onClick={getMapString}>
         Print Map String
       </Button>
-      <div id="map" className='position-absolute'>
-        <Image
-          className='systemTile z-0 grabbable position-absolute'
-          style={{ left: 200, top: 391.5 }}
-          width="200px"
-          src={`/tiles/ST_${18}.webp`}
-        />
-      </div>
+      <Form.Control type="text" placeholder="Enter Map String" value={mapStringInput} onChange={
+        (e) => {
+          if (!/[^ A-Za-z0-9\-\{\}]/.test(e.target.value)) {
+            setMapStringInput(e.target.value)
+          }
+        }
+      } />
+      <Button onClick={loadMapString}>
+        Load Map String
+      </Button>
 
-      <div id="unusedTilesBin" className='z-1 p-3 position-absolute overflow-y-auto overflow-x-hidden rounded border border-light border-5'
-        style={{
-          top: "0px",
-          right: "20px",
-          width: "50vw",
-          height: "50vh",
-          maxWidth: "70vw",
-          maxHeight: "100vh",
-          backgroundColor: "rgba(255, 255, 255, 0.5)"
-        }}>
-        <div className='row row-cols-auto'>
-          {systemPool}
-        </div>
-      </div>
+      <SystemTilePlacer mapPosition={mapPosition} mapTiles={mapTiles} />
+
+      <GalaxyTokenPlacer mapPosition={mapPosition} />
+
+      <Controls/>
     </>
   )
 }

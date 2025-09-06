@@ -15,8 +15,8 @@ export const TECH_SPECIALTIES = {
 
 export const ANOMALIES = {
     "NEBULA": "nebula",
-    "GRAVITY_RIFT": "gravity-rift",
-    "ASTEROID_FIELD": "asteroid-field",
+    "GRAVITY_RIFT": "gravity rift",
+    "ASTEROID_FIELD": "asteroid field",
     "SUPERNOVA": "supernova",
 };
 
@@ -564,6 +564,71 @@ export const hyperlanes = {
 }
 
 const tileData = {
+    "HS_1": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_2": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_3": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_4": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_5": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_6": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_7": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+    "HS_8": {
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
+
+    "0": {
+        // race: "Blank",
+        type: SYSTEM_TYPES.GREEN,
+        set: EXPANSIONS.Base,
+        wormhole: [],
+        anomaly: [],
+        planets: []
+    },
     "1": {
         type: SYSTEM_TYPES.GREEN,
         race: "The Federation of Sol",
@@ -1369,7 +1434,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.Base,
         wormhole: [],
-        anomaly: ["gravity-rift"],
+        anomaly: [ANOMALIES.GRAVITY_RIFT],
         planets: [
         ]
     },
@@ -1377,7 +1442,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.Base,
         wormhole: [],
-        anomaly: ["nebula"],
+        anomaly: [ANOMALIES.NEBULA],
         planets: [
         ]
     },
@@ -1385,7 +1450,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.Base,
         wormhole: [],
-        anomaly: ["supernova"],
+        anomaly: [ANOMALIES.SUPERNOVA],
         planets: [
         ]
     },
@@ -1393,7 +1458,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.Base,
         wormhole: [],
-        anomaly: ["asteroid-field"],
+        anomaly: [ANOMALIES.ASTEROID_FIELD],
         planets: [
         ]
     },
@@ -1401,7 +1466,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.Base,
         wormhole: [],
-        anomaly: ["asteroid-field"],
+        anomaly: [ANOMALIES.ASTEROID_FIELD],
         planets: [
         ]
     },
@@ -1736,7 +1801,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.POK,
         wormhole: [],
-        anomaly: ["gravity-rift"],
+        anomaly: [ANOMALIES.GRAVITY_RIFT],
         planets: [
             {
                 name: "Cormund",
@@ -1752,7 +1817,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.POK,
         wormhole: [],
-        anomaly: ["nebula"],
+        anomaly: [ANOMALIES.NEBULA],
         planets: [
             {
                 name: "Everra",
@@ -1992,7 +2057,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.POK,
         wormhole: ["alpha"],
-        anomaly: ["asteroid-field"],
+        anomaly: [ANOMALIES.ASTEROID_FIELD],
         planets: [
         ]
     },
@@ -2000,7 +2065,7 @@ const tileData = {
         type: SYSTEM_TYPES.RED,
         set: EXPANSIONS.POK,
         wormhole: [],
-        anomaly: ["supernova"],
+        anomaly: [ANOMALIES.SUPERNOVA],
         planets: [
         ]
     },
@@ -2014,6 +2079,22 @@ const tileData = {
         ]
     },
     "82": {
+        type: SYSTEM_TYPES.BLUE,
+        set: EXPANSIONS.POK,
+        "special": true,
+        wormhole: [WORMHOLES.GAMMA],
+        planets: [
+            {
+                name: "Mallice",
+                resources: 0,
+                influence: 3,
+                trait: "cultural",
+                specialty: null,
+                legendary: true
+            }
+        ]
+    },
+    "82_Back": {
         type: SYSTEM_TYPES.BLUE,
         set: EXPANSIONS.POK,
         "special": true,
